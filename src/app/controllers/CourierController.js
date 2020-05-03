@@ -53,10 +53,6 @@ class CourierController {
 
     const { courierId } = req.params;
 
-    if (!courierId) {
-      return res.status(400).json({ error: 'Courier ID not informed' });
-    }
-
     const { email } = req.body;
 
     const courier = await Courier.findByPk(courierId);
@@ -82,10 +78,6 @@ class CourierController {
 
   async delete(req, res) {
     const { courierId } = req.params;
-
-    if (!courierId) {
-      return res.status(400).json({ error: 'Courier ID not informed' });
-    }
 
     const courier = await Courier.findByPk(courierId);
 

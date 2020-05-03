@@ -16,6 +16,7 @@ module.exports = {
           onDelete: 'SET NULL',
           allowNull: false,
         },
+        allowNull: false,
       },
       courier_id: {
         type: Sequelize.INTEGER,
@@ -26,6 +27,7 @@ module.exports = {
           onDelete: 'SET NULL',
           allowNull: false,
         },
+        allowNull: false,
       },
       signature_id: {
         type: Sequelize.INTEGER,
@@ -36,6 +38,7 @@ module.exports = {
           onDelete: 'SET NULL',
           allowNull: false,
         },
+        allowNull: true,
       },
       product: {
         type: Sequelize.STRING,
@@ -47,11 +50,11 @@ module.exports = {
       },
       start_date: {
         type: Sequelize.DATE,
-        allowNull: false,
+        allowNull: true,
       },
       end_date: {
         type: Sequelize.DATE,
-        allowNull: false,
+        allowNull: true,
       },
       created_at: {
         type: Sequelize.DATE,
