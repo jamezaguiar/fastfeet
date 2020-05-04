@@ -1,4 +1,7 @@
+import * as Yup from 'yup';
 import Order from '../models/Order';
+import Recipient from '../models/Recipient';
+import Courier from '../models/Courier';
 
 class OrderController {
   async index(req, res) {
@@ -8,7 +11,33 @@ class OrderController {
   }
 
   async store(req, res) {
-    return res.json();
+    const schema = Yup.object().shape({
+      product: Yup.string().required(),
+      recipient_id: Yup.number().positive().integer().required(),
+      courier_id: Yup.number().positive().integer().required(),
+    });
+
+    if (!(await schema.isValid(req.body))) {
+      return res.status(400).json({ error: 'Validation fails' });
+    }
+
+    const recipientExists = await Recipient.findByPk(req.body.recipient_id);
+
+    if (!recipientExists) {
+      return res.status(400).json({ error: 'Recipient not found' });
+    }
+
+    const courierExists = await Courier.findByPk(req.body.courier_id);
+
+    if (!courierExists) {
+      return res.status(400).json({ error: 'Courier not found' });
+    }
+
+    const { id, product, recipient_id, courier_id } = await Order.create(
+      req.body
+    );
+
+    return res.json({ id, product, recipient_id, courier_id });
   }
 
   async update(req, res) {
