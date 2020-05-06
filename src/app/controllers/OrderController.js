@@ -2,10 +2,49 @@ import * as Yup from 'yup';
 import Order from '../models/Order';
 import Recipient from '../models/Recipient';
 import Courier from '../models/Courier';
+import File from '../models/File';
 
 class OrderController {
   async index(req, res) {
-    const orders = await Order.findAll();
+    const orders = await Order.findAll({
+      where: {
+        canceled_at: null,
+      },
+      order: ['start_date'],
+      include: [
+        {
+          model: File,
+          as: 'signature',
+          attributes: ['id', 'path', 'url'],
+        },
+        {
+          model: Courier,
+          as: 'courier',
+          attributes: ['id', 'name'],
+          include: [
+            {
+              model: File,
+              as: 'avatar',
+              attributes: ['id', 'path', 'url'],
+            },
+          ],
+        },
+        {
+          model: Recipient,
+          as: 'recipient',
+          attributes: [
+            'id',
+            'name',
+            'street',
+            'number',
+            'complement',
+            'state',
+            'city',
+            'zip_code',
+          ],
+        },
+      ],
+    });
 
     return res.json(orders);
   }
@@ -41,11 +80,47 @@ class OrderController {
   }
 
   async update(req, res) {
-    return res.json();
+    const schema = Yup.object().shape({
+      courier_id: Yup.number().positive().integer().required(),
+    });
+
+    if (!(await schema.isValid(req.body))) {
+      return res.status(400).json({ error: 'Validation fails' });
+    }
+
+    const { courier_id } = req.body;
+
+    const courierExists = await Courier.findOne({ where: courier_id });
+
+    if (!courierExists) {
+      return res.status(400).json({ error: 'Courier not exists' });
+    }
+
+    const { orderId } = req.params;
+
+    const order = await Order.findByPk(orderId);
+
+    if (!order) {
+      return res.status(400).json({ error: 'Order not exists' });
+    }
+
+    order.courier_id = courier_id;
+
+    await order.save();
+
+    return res.json(order);
   }
 
   async delete(req, res) {
-    return res.json();
+    const { orderId } = req.params;
+
+    const order = await Order.findByPk(orderId);
+
+    order.canceled_at = new Date();
+
+    await order.save();
+
+    return res.json(order);
   }
 }
 
