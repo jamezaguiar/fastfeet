@@ -62,9 +62,9 @@ class OrderController {
       return res.status(400).json({ error: 'Validation fails' });
     }
 
-    const recipientExists = await Recipient.findByPk(req.body.recipient_id);
+    const recipient = await Recipient.findByPk(req.body.recipient_id);
 
-    if (!recipientExists) {
+    if (!recipient) {
       return res.status(400).json({ error: 'Recipient not found' });
     }
 
@@ -82,7 +82,17 @@ class OrderController {
     await Mail.sendMail({
       to: `${courier.name} <${courier.email}>`,
       subject: 'Nova encomenda cadastrada',
-      text: 'Vocẽ tem uma nova encomenda para entregar',
+      template: 'newOrder',
+      context: {
+        courier: courier.name,
+        recipient: recipient.name,
+        street: recipient.street,
+        number: recipient.number,
+        complement: recipient.complement,
+        state: recipient.state,
+        city: recipient.city,
+        zip_code: recipient.zip_code,
+      },
     });
 
     return res.json({ id, product, recipient_id, courier_id });
