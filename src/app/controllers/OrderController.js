@@ -4,6 +4,8 @@ import Recipient from '../models/Recipient';
 import Courier from '../models/Courier';
 import File from '../models/File';
 
+import Mail from '../../lib/Mail';
+
 class OrderController {
   async index(req, res) {
     const orders = await Order.findAll({
@@ -66,15 +68,22 @@ class OrderController {
       return res.status(400).json({ error: 'Recipient not found' });
     }
 
-    const courierExists = await Courier.findByPk(req.body.courier_id);
+    const courier = await Courier.findByPk(req.body.courier_id);
 
-    if (!courierExists) {
+    if (!courier) {
       return res.status(400).json({ error: 'Courier not found' });
     }
 
     const { id, product, recipient_id, courier_id } = await Order.create(
       req.body
     );
+
+    // Envio de email para o courier
+    await Mail.sendMail({
+      to: `${courier.name} <${courier.email}>`,
+      subject: 'Nova encomenda cadastrada',
+      text: 'Vocẽ tem uma nova encomenda para entregar',
+    });
 
     return res.json({ id, product, recipient_id, courier_id });
   }
@@ -115,6 +124,10 @@ class OrderController {
     const { orderId } = req.params;
 
     const order = await Order.findByPk(orderId);
+
+    if (order.canceled_at) {
+      return res.status(400).json({ error: 'Order already cancelled' });
+    }
 
     order.canceled_at = new Date();
 
